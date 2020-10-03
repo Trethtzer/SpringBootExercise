@@ -3,6 +3,7 @@ package com.silesbonilla.springbootexercise.controller;
 import java.util.List;
 import java.util.Optional;
 
+import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
@@ -91,4 +92,36 @@ public class AccountController {
 	        return ResponseEntity.ok().body("Account deleted successfully");
 		}        
     }
+	
+	@PostMapping("/transfer/")
+	public ResponseEntity<String> transfer(@RequestBody String jsonString){
+		JSONObject jsonObj = new JSONObject(jsonString);
+		float moneyToBeTransfered = jsonObj.getFloat("money");
+		long idAccountToGiveMoney = jsonObj.getLong("accountToGiveMoney");
+		long idAccountToReceiveMoney = jsonObj.getLong("accountToReceiveMoney");
+		
+		Optional<Account> accountToGiveMoney = accountRepository.findById(idAccountToGiveMoney);
+		Optional<Account> accountToReceiveMoney = accountRepository.findById(idAccountToReceiveMoney);
+		
+		ResponseEntity<String> re;
+		
+		if(accountToGiveMoney.isEmpty() || accountToReceiveMoney.isEmpty()) {
+			re = ResponseEntity.notFound().build();
+		}else {
+			// If account which gives money isn't treasury and doesn't have enough money we cancel the transfer.
+			if( !accountToGiveMoney.get().isTreasury() && ((accountToGiveMoney.get().getMoney() - moneyToBeTransfered) < 0) ) {
+				re = ResponseEntity.badRequest().body("The account doesn't have enough money to make the transaction.");
+			}else {
+				accountToGiveMoney.get().setMoney(accountToGiveMoney.get().getMoney() - moneyToBeTransfered);
+				accountToReceiveMoney.get().setMoney(accountToReceiveMoney.get().getMoney() + moneyToBeTransfered);
+				
+				accountRepository.save(accountToGiveMoney.get());
+				accountRepository.save(accountToReceiveMoney.get());
+				
+				re = ResponseEntity.ok("Money transfered successfully");
+			}
+		}			
+		
+		return re;
+	}
 }
