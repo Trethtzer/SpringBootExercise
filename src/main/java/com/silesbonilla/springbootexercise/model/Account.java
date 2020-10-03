@@ -10,7 +10,9 @@ import javax.persistence.Table;
 @Entity
 @Table(name = "accounts")
 public class Account {
-
+	
+	//I decided to make all columns required to avoid complex situations. 
+	
 	@Id
 	@GeneratedValue(strategy = GenerationType.AUTO)
 	private long id;

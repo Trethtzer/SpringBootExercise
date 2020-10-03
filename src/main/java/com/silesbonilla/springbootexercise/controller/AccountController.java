@@ -45,6 +45,8 @@ public class AccountController {
 	
 	@PostMapping("/accounts")
     public ResponseEntity<Account> createAccount(@Validated @RequestBody Account account) {   
+		
+		// To avoid an account to be created with treasury = false and negative balance.
 		if (!account.isTreasury()) {
 			if (account.getMoney() < 0) {
 				return ResponseEntity.badRequest().build();
@@ -58,14 +60,15 @@ public class AccountController {
 	@PutMapping("/accounts/{id}")
     public ResponseEntity<Account> updateAccount(@PathVariable(value = "id") Long accountId,
         @Validated @RequestBody Account accountDetails){
+		
         Optional<Account> account = accountRepository.findById(accountId);            
 
         ResponseEntity<Account> re;
         
         if (account.isEmpty()) {
 			re = ResponseEntity.notFound().build();
-		}else {			
-			
+		}else {		
+			// If treasury is false and trying to set a negative balance.
 			if ((accountDetails.getMoney() < 0) && !account.get().isTreasury()) {
 				re = ResponseEntity.badRequest().build();
 			}else {
@@ -105,6 +108,7 @@ public class AccountController {
 		
 		ResponseEntity<String> re;
 		
+		// If any of the accounts doesn't exist.
 		if(accountToGiveMoney.isEmpty() || accountToReceiveMoney.isEmpty()) {
 			re = ResponseEntity.notFound().build();
 		}else {
