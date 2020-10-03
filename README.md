@@ -44,3 +44,5 @@ You can download a postman collection I created in order to avoid spelling mista
 4. PUT: Put operation to update an account.
 5. DELETE: Delete operation to delete an account.
 6. POST 2: Post operation to make a transfer.
+
+To import it, just File -> import in postman, and select the apiexercise.postman_collection file included in the project.
