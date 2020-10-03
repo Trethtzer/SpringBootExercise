@@ -43,7 +43,13 @@ public class AccountController {
     }
 	
 	@PostMapping("/accounts")
-    public ResponseEntity<Account> createAccount(@Validated @RequestBody Account account) {        
+    public ResponseEntity<Account> createAccount(@Validated @RequestBody Account account) {   
+		if (!account.isTreasury()) {
+			if (account.getMoney() < 0) {
+				return ResponseEntity.badRequest().build();
+			}
+		}
+		
 		accountRepository.save(account);
 		return ResponseEntity.ok().body(account);
     }
@@ -53,16 +59,25 @@ public class AccountController {
         @Validated @RequestBody Account accountDetails){
         Optional<Account> account = accountRepository.findById(accountId);            
 
+        ResponseEntity<Account> re;
+        
         if (account.isEmpty()) {
-			return ResponseEntity.notFound().build();
+			re = ResponseEntity.notFound().build();
 		}else {			
-			account.get().setCurrency(accountDetails.getCurrency());			
-			account.get().setMoney(accountDetails.getMoney());		
-			account.get().setName(accountDetails.getName());
 			
-	        final Account updatedAccount = accountRepository.save(account.get());
-			return ResponseEntity.ok().body(updatedAccount);
+			if ((accountDetails.getMoney() < 0) && !account.get().isTreasury()) {
+				re = ResponseEntity.badRequest().build();
+			}else {
+				account.get().setCurrency(accountDetails.getCurrency());			
+				account.get().setMoney(accountDetails.getMoney());		
+				account.get().setName(accountDetails.getName());
+				
+		        final Account updatedAccount = accountRepository.save(account.get());
+				re = ResponseEntity.ok().body(updatedAccount);
+			}				
 		}
+        
+        return re;
     }
 	
 	@DeleteMapping("/accounts/{id}")
